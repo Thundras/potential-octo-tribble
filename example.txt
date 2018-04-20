@@ -1,0 +1,52 @@
+AirDropFrequency: 72
+AirDropMarker: False
+Architecture64: True
+BlockDurabilityModifier: 100
+BloodMoonEnemyCount: 10
+BuildCreate: False
+CompatibilityVersion: Alpha 16.4
+CountryCode: DE
+CurrentPlayers: 1
+CurrentServerTime: 3172166 - 133 04:09
+DayCount: 3
+DayLightLength: 18
+DayNightLength: 60
+DropOnDeath: 2
+DropOnQuit: 0
+EACEnabled: True
+EnemyDifficulty: 0
+EnemySpawnMode: True
+GameDifficulty: 4
+GameHost: 7 days Chaos
+GameMode: SurvivalMP
+GameName: reaven
+GameType: 7DTD
+IP: 95.156.227.89
+IsDedicated: True
+IsPasswordProtected: True
+IsPublic: True
+LandClaimDeadZone: 30
+LandClaimDecayMode: 0
+LandClaimExpiryTime: 3
+LandClaimOfflineDurabilityModifier: 0
+LandClaimOnlineDurabilityModifier: 0
+LandClaimSize: 50
+LevelName: Random Gen
+LootAbundance: 50
+LootRespawnDays: 7
+MaxPlayers: 10
+MaxSpawnedAnimals: 50
+MaxSpawnedZombies: 40
+Ping: -1
+Platform: LinuxPlayer
+PlayerKillingMode: 2
+Port: 27260
+RequiresMod: False
+ServerDescription: Chaos
+ServerWebsiteURL:
+ShowFriendPlayerOnMap: True
+SteamID: 90114274196415493
+StockFiles: False
+StockSettings: False
+Version: Alpha 16.4
+ZombiesRun: 0
