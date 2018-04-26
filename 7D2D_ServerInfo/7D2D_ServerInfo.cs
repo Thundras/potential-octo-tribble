@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -99,12 +100,16 @@ namespace _7D2D_ServerInfo
         public string Version { get; private set; }//Version: Alpha 16.4
         public enumZombieRun ZombiesRun { get; private set; }//ZombiesRun: 0
 
+        public int CurrentServerTimeYear { get; private set; }
+        public int CurrentServerTimeMonth { get; private set; }
+        public int CurrentServerTimeDay { get; private set; }
         public int CurrentServerTimeDays { get; private set; }
         public int CurrentServerTimeHours { get; private set; }
         public int CurrentServerTimeMins { get; private set; }
         public int CurrentServerTimeNextBloodMoon { get; private set; }
         public int CurrentServerTimeNextSupply { get; private set; }
-
+        public DateTime CurrentServerTimeDate { get; private set; }
+        public DateTime CurrentServerTimeDateInitial { get; private set; }
 
         public DateTime LastUpdate { get; private set; }
 
@@ -114,9 +119,11 @@ namespace _7D2D_ServerInfo
         public _7D2D_ServerInfo(): this(false) {}
         public _7D2D_ServerInfo(bool Debug)
         {
+            CurrentServerTimeDateInitial = new DateTime(2018, 1, 1);
+
             debug = Debug;
             if (Debug == false)
-                Con = new ConnectionUDP("95.156.227.89", 27260);
+                Con = new ConnectionUDP( "185.239.237.61", 37018);
             else
                 Con = new ConnectionUDP();
             Refresh();
@@ -153,12 +160,31 @@ namespace _7D2D_ServerInfo
 
         private void CalcCurrentServerTime()
         {
-            //CurrentServerTime = 3172166;
+            //CurrentServerTime = 13172166;
             CurrentServerTimeDays = (int)((float)((CurrentServerTime / 24000) + 1));
             CurrentServerTimeHours = (int)((float)((CurrentServerTime % 24000) / 1000));
             CurrentServerTimeMins = (int)((float)((float)(CurrentServerTime % 1000) * 60) / 1000);
             CurrentServerTimeNextBloodMoon = (7 - (CurrentServerTimeDays % 7)) % 7;
             CurrentServerTimeNextSupply = ((AirDropFrequency / 24) - CurrentServerTimeDays % (AirDropFrequency / 24) + 1) % (AirDropFrequency / 24);
+            CurrentServerTimeDate = CurrentServerTimeDateInitial.AddDays(CurrentServerTimeDays);
+
+            CurrentServerTimeYear = CurrentServerTimeDate.Year - CurrentServerTimeDateInitial.Year + 1;
+            CurrentServerTimeMonth = CurrentServerTimeDate.Month;
+            CurrentServerTimeDay = CurrentServerTimeDate.Day;
+        }
+
+        public DateTime GetCalendarStart()
+        {
+            return new DateTime(CurrentServerTimeDate.Year, CurrentServerTimeDate.Month, 1);
+        }
+        public DateTime GetCalendarEnd()
+        {
+            return GetCalendarEnd(5);
+        }
+
+        public DateTime GetCalendarEnd(int MonthDuration)
+        {
+            return (new DateTime(CurrentServerTimeDate.AddMonths(MonthDuration).Year, CurrentServerTimeDate.AddMonths(MonthDuration).Month, 1)).AddDays(-1);
         }
 
         public bool IsBloodMoon(int Day)
