@@ -104,7 +104,7 @@ namespace _7D2D_ServerInfo
                     if (curWeekDate.Month != curMonthDate.Month) break;
 
                     Console.BackgroundColor = ConsoleColor.Black;
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 9); Console.Write($"{cultureInfo.Calendar.GetWeekOfYear(curWeekDate, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday),2}");
 
                     if (WeekIndex == 0)
@@ -130,12 +130,12 @@ namespace _7D2D_ServerInfo
                             else
                                 Console.ForegroundColor = ConsoleColor.Gray;
 
-                            if (_ServerInfo.CurrentServerTimeDays == (Day - _ServerInfo.CurrentServerTimeDateInitial).Days + 1 )
+                            if (_ServerInfo.CurrentServerTimeDays == (Day - _ServerInfo.CurrentServerTimeDateInitial).Days + 1)
                             {
+                                String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29, 1));
                                 ConsoleColor color = Console.BackgroundColor;
                                 Console.BackgroundColor = Console.ForegroundColor;
                                 Console.ForegroundColor = color;
-
                             }
                                 Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 11 + DayIndex); Console.Write($"{Day.Day,2}");
                         }
@@ -146,9 +146,9 @@ namespace _7D2D_ServerInfo
 
             }
 
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.BackgroundColor = ConsoleColor.Black;
-            String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29,1));
+            //Console.ForegroundColor = ConsoleColor.Gray;
+            //Console.BackgroundColor = ConsoleColor.Black;
+            //String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29, 1));
 
         }
 
