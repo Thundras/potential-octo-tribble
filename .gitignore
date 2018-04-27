@@ -259,3 +259,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/7D2D_ServerInfo/publish/Application Files/7D2D_ServerInfo_1_0_0_8/res/desktop.ini
+/7D2D_ServerInfo/publish/Application Files/7D2D_ServerInfo_1_0_0_8/desktop.ini
