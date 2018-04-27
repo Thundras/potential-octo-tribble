@@ -24,7 +24,10 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>https://github.com/Thundras/potential-octo-tribble/raw/master/7D2D_ServerInfo/publish/</InstallUrl>
-    <ApplicationRevision>8</ApplicationRevision>
+    <ProductName>7DTD Server Info</ProductName>
+    <PublisherName>Thundras</PublisherName>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
+    <ApplicationRevision>9</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
