@@ -23,9 +23,9 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://drive.google.com/drive/folders/1BIVAOUZCfBjweCITvCnr3OQZykQ_Wz26%3fusp=sharing/</InstallUrl>
+    <InstallUrl>https://github.com/Thundras/potential-octo-tribble/tree/master/7D2D_ServerInfo/publish/</InstallUrl>
     <UpdateUrl>https://drive.google.com/drive/folders/1BIVAOUZCfBjweCITvCnr3OQZykQ_Wz26%3fusp=sharing/</UpdateUrl>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>5</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
