@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -16,115 +17,268 @@ namespace _7D2D_ServerInfo
         public GUI_Console(_7D2D_ServerInfo _ServerInfo)
         {
             this._ServerInfo = _ServerInfo;
+            Console.WindowWidth = 111; // MaxDaysHorizontal * MaxCharactersPerDay -3;
+            Console.WindowHeight = 20;
         }
 
         public void Draw()
         {
-            for (var CurrentDay = 0; CurrentDay < MaxDaysHorizontal; CurrentDay++)
-            {
-                Console.WindowWidth = MaxDaysHorizontal * MaxCharactersPerDay + 3 + 3;
-                Console.WindowHeight = 25;
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 1);
-                Console.Write($" {_ServerInfo.CurrentServerTimeDays + CurrentDay}  ");
+            var OffsetY = 0;
+            //for (var CurrentDay = 0; CurrentDay < MaxDaysHorizontal; CurrentDay++)
+            //{
+            //    
+            //    Console.ForegroundColor = ConsoleColor.Gray;
+            //    Console.BackgroundColor = ConsoleColor.Black;
+            //    Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 1);
+            //    Console.Write($" {_ServerInfo.CurrentServerTimeDays + CurrentDay}  ");
 
-                if (_ServerInfo.IsBloodMoon(_ServerInfo.CurrentServerTimeDays + CurrentDay))
-                    Console.ForegroundColor = ConsoleColor.Red;
-                else
-                    Console.ForegroundColor = ConsoleColor.Gray;
+            //    if (_ServerInfo.IsBloodMoon(_ServerInfo.CurrentServerTimeDays + CurrentDay))
+            //        Console.ForegroundColor = ConsoleColor.Red;
+            //    else
+            //        Console.ForegroundColor = ConsoleColor.Gray;
 
-                if (CurrentDay == 0)
-                    Console.BackgroundColor = ConsoleColor.DarkGreen;
-                else
-                    Console.BackgroundColor = ConsoleColor.Black;
+            //    if (CurrentDay == 0)
+            //        Console.BackgroundColor = ConsoleColor.DarkGreen;
+            //    else
+            //        Console.BackgroundColor = ConsoleColor.Black;
 
-                Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 2);
-                Console.Write("╔═══╗");
-                Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 3);
-                Console.Write("║   ║");
-                Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 4);
-                Console.Write("╚═══╝");
-                //╔╗╚╝═║
+            //    Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 2);
+            //    Console.Write("╔═══╗");
+            //    Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 3);
+            //    Console.Write("║   ║");
+            //    Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 3, 4);
+            //    Console.Write("╚═══╝");
+            //    //╔╗╚╝═║
 
-                if (_ServerInfo.IsAirdrop(_ServerInfo.CurrentServerTimeDays + CurrentDay))
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 1 + 3, 3);
-                    Console.Write(" A ");
-                }
-            }
+            //    if (_ServerInfo.IsAirdrop(_ServerInfo.CurrentServerTimeDays + CurrentDay))
+            //    {
+            //        Console.ForegroundColor = ConsoleColor.Yellow;
+            //        Console.SetCursorPosition(CurrentDay * MaxCharactersPerDay + 1 + 3, 3);
+            //        Console.Write(" A ");
+            //    }
+            //}
 
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
 
-            Console.SetCursorPosition(3, 6);
-            Console.WriteLine($"Server Name : {_ServerInfo.GameHost}");
-            Console.WriteLine($"Beschreibung: {_ServerInfo.ServerDescription}");
-            Console.WriteLine($"Version     : {_ServerInfo.Version}");
-            Console.WriteLine($"Server Zeit : {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}");
-            Console.WriteLine($"Spieler     : {_ServerInfo.CurrentPlayers}/{_ServerInfo.MaxPlayers}");
+            OffsetY = 1;
 
-            /*
-            //│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬
-            Console.WriteLine($"   ╔═══════════════════╗╔═══════════════════╗╔═══════════════════╗╔═══════════════════╗");
-            Console.WriteLine($"   ║     Monthname     ║║     Monthname     ║║     Monthname     ║║     Monthname     ║");
-            Console.WriteLine($"   ║  ❶  ❷  ❸  ❹  ❺  ❻ ║║  ❶  ❷  ❸  ❹  ❺  ❻ ║║  ❶  ❷  ❸  ❹  ❺  ❻ ║║  ❶  ❷  ❸  ❹  ❺  ❻ ║");
-            Console.WriteLine($"   ╠═╤══╤══╤══╤══╤══╤══╣╠═╤══╤══╤══╤══╤══╤══╣╠═╤══╤══╤══╤══╤══╤══╣╠═╤══╤══╤══╤══╤══╤══╣");
-            Console.WriteLine($"   ║M│ 1│ 8│15│22│29│  ║║M│ 1│ 8│15│22│29│  ║║M│ 1│ 8│15│22│29│  ║║M│ 1│ 8│15│22│29│  ║");
-            Console.WriteLine($"   ║D│ 2│ 9│16│23│30│  ║║D│ 2│ 9│16│23│30│  ║║D│ 2│ 9│16│23│30│  ║║D│ 2│ 9│16│23│30│  ║");
-            Console.WriteLine($"   ║M│ 3│10│17│24│31│  ║║M│ 3│10│17│24│31│  ║║M│ 3│10│17│24│31│  ║║M│ 3│10│17│24│31│  ║");
-            Console.WriteLine($"   ║D│ 4│11│18│25│  │  ║║D│ 4│11│18│25│  │  ║║D│ 4│11│18│25│  │  ║║D│ 4│11│18│25│  │  ║");
-            Console.WriteLine($"   ║F│ 5│12│19│26│  │  ║║F│ 5│12│19│26│  │  ║║F│ 5│12│19│26│  │  ║║F│ 5│12│19│26│  │  ║");
-            Console.WriteLine($"   ║S│ 6│13│20│27│  │  ║║S│ 6│13│20│27│  │  ║║S│ 6│13│20│27│  │  ║║S│ 6│13│20│27│  │  ║");
-            Console.WriteLine($"   ║S│ 7│14│21│28│  │  ║║S│ 7│14│21│28│  │  ║║S│ 7│14│21│28│  │  ║║S│ 7│14│21│28│  │  ║");
-            Console.WriteLine($"   ╚═╧══╧══╧══╧══╧══╧══╝╚═╧══╧══╧══╧══╧══╧══╝╚═╧══╧══╧══╧══╧══╧══╝╚═╧══╧══╧══╧══╧══╧══╝");
-            */
-            ///*
-            DateTime CalendarStart = _ServerInfo.GetCalendarStart();// new DateTime(CurrentServerTimeDate.Year, CurrentServerTimeDate.Month, 1);
-            DateTime CalendarEnd = _ServerInfo.GetCalendarEnd(5);// (new DateTime(CurrentServerTimeDate.AddMonths(3).Year, CurrentServerTimeDate.AddMonths(3).Month, 1)).AddDays(-1);
+            Console.SetCursorPosition(3, OffsetY + 0); Console.WriteLine($"Server Name : {_ServerInfo.GameHost}");
+            Console.SetCursorPosition(3, OffsetY + 1); Console.WriteLine($"Beschreibung: {_ServerInfo.ServerDescription}");
+            Console.SetCursorPosition(3, OffsetY + 2); Console.WriteLine($"Version     : {_ServerInfo.Version}");
+            Console.SetCursorPosition(3, OffsetY + 3); Console.WriteLine($"Server Zeit : {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}");
+            Console.SetCursorPosition(3, OffsetY + 4); Console.WriteLine($"Spieler     : {_ServerInfo.CurrentPlayers}/{_ServerInfo.MaxPlayers}");
 
-            CultureInfo xy = CultureInfo.CurrentCulture; //new CultureInfo("de-DE");
-            var tmp = xy.Calendar.GetWeekOfYear(new DateTime(2018, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-            for (var j = 0; j < 5; j++)
+            DateTime CalendarStart = _ServerInfo.GetCalendarStart();
+            DateTime CalendarEnd = _ServerInfo.GetCalendarEnd(5);
+
+
+            OffsetY = 7;
+            CultureInfo cultureInfo = CultureInfo.CurrentCulture; //new CultureInfo("de-DE");
+            var tmp = cultureInfo.Calendar.GetWeekOfYear(new DateTime(2018, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            for (var MonthIndex = 0; MonthIndex < 5; MonthIndex++)
             {
-                var curMonthDate = CalendarStart.AddMonths(j);
+                var curMonthDate = CalendarStart.AddMonths(MonthIndex);
 
-                var MonthName = curMonthDate.ToString("MMMM", xy);
-                Console.SetCursorPosition(21 * j + 3, 12); Console.Write($"╔═══════════════════╗");
-                Console.SetCursorPosition(21 * j + 3, 13); Console.Write($"║{MonthName,-19    }║");
-                Console.SetCursorPosition(21 * j + 3, 14); Console.Write($"║                   ║");
-                Console.SetCursorPosition(21 * j + 3, 15); Console.Write($"╠═╦══╦══╦══╦══╦══╦══╣");
-                Console.SetCursorPosition(21 * j + 3, 16); Console.Write($"║M║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 17); Console.Write($"║D║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 18); Console.Write($"║M║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 19); Console.Write($"║D║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 20); Console.Write($"║F║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 21); Console.Write($"║S║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 22); Console.Write($"║S║  ║  ║  ║  ║  ║  ║");
-                Console.SetCursorPosition(21 * j + 3, 23); Console.Write($"╚═╩══╩══╩══╩══╩══╩══╝");
+                var MonthName = $"{curMonthDate.ToString("MMMM", cultureInfo)} {curMonthDate.Year - _ServerInfo.CurrentServerTimeDateInitial.Year + 1:D2}";
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  0); Console.Write($"╔═══════════════════╗");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  1); Console.Write($"║  {MonthName,-15}  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  2); Console.Write($"║                   ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  3); Console.Write($"╠═╦══╦══╦══╦══╦══╦══╣");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  4); Console.Write($"║M║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  5); Console.Write($"║D║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  6); Console.Write($"║M║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  7); Console.Write($"║D║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  8); Console.Write($"║F║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY +  9); Console.Write($"║S║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY + 10); Console.Write($"║S║  ║  ║  ║  ║  ║  ║");
+                Console.SetCursorPosition(21 * MonthIndex + 3, OffsetY + 11); Console.Write($"╚═╩══╩══╩══╩══╩══╩══╝");
 
-                
-                
-                for (var k = 0; k < 6; k++)
+
+                var curWeekDate = curMonthDate;
+
+                for (var WeekIndex = 0; WeekIndex < 6; WeekIndex++)
                 {
-                    var curWeekDate = curMonthDate.AddDays(k * 7);
-                    
+                    if (curWeekDate.Month != curMonthDate.Month) break;
+
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 9); Console.Write($"{cultureInfo.Calendar.GetWeekOfYear(curWeekDate, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday),2}");
+
+                    if (WeekIndex == 0)
+                    {
+                        var curWeekDay = (int)curWeekDate.DayOfWeek;
+                        curWeekDay = curWeekDay - 1;
+                        if (curWeekDay < 0) curWeekDay += 7;
+                        curWeekDate = curWeekDate.AddDays(-curWeekDay);
+                    }
+
+                    var Day = curWeekDate;
+                    for (var DayIndex = 0; DayIndex < 7; DayIndex++)
+                    {
+                        if (Day.Month == curMonthDate.Month)
+                        {
+                            if (_ServerInfo.IsBloodMoon(Day))
+                                Console.BackgroundColor = ConsoleColor.Red;
+                            else
+                                Console.BackgroundColor = ConsoleColor.Black;
+
+                            if (_ServerInfo.IsAirdrop(Day))
+                                Console.ForegroundColor = ConsoleColor.Green;
+                            else
+                                Console.ForegroundColor = ConsoleColor.Gray;
+
+                            if (_ServerInfo.CurrentServerTimeDays == (Day - _ServerInfo.CurrentServerTimeDateInitial).Days + 1 )
+                            {
+                                ConsoleColor color = Console.BackgroundColor;
+                                Console.BackgroundColor = Console.ForegroundColor;
+                                Console.ForegroundColor = color;
+
+                            }
+                                Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 11 + DayIndex); Console.Write($"{Day.Day,2}");
+                        }
+                        Day = Day.AddDays(1);
+                    }
+                    curWeekDate = curWeekDate.AddDays(7);
                 }
 
             }
 
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
+            String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29,1));
 
+        }
 
+        public void DrawConnectionError()
+        {
+            //Console.Clear();
+            //Console.ResetColor();
+            Console.WriteLine($"{DateTime.Now.ToString()}: Fehler beim herstellen der Verbindung.");
+            Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
+        }
 
-
-            //Console.SetCursorPosition(0, 13);
-            //for (DateTime x = CalendarStart; x <= CalendarEnd; x = x.AddDays(1))
-            //{
-            //    TimeSpan ts = x - _ServerInfo.CurrentServerTimeDateInitial.AddDays(-1);
-            //    Console.WriteLine($"   {ts.Days,4} {x.DayOfYear,4} {x.DayOfWeek.ToString().Substring(0, 2)} {x.Day:D2}.{x.Month:D2}.{x.Year - _ServerInfo.CurrentServerTimeDateInitial.Year + 1:D2}");
-            //}
-            //*/
+        private void String2ASCII(string Text, Point Position)
+        {
+            var StringLength = 0;
+            foreach (char currentChar in Text)
+            {
+                switch (currentChar.ToString())
+                {
+                    case "0":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ██████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write("██╔═████╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("██║██╔██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("████╔╝██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("╚██████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write(" ╚═════╝  ");
+                        StringLength += 10;
+                        break;
+                    case "1":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write("    ██╗   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write("   ███║   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("   ╚██║   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("    ██║   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("    ██║   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("    ╚═╝   ");
+                        StringLength += 10;
+                        break;
+                    case "2":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ██████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ╚════██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("  █████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write(" ██╔═══╝  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write(" ███████╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write(" ╚══════╝ ");
+                        StringLength += 10;
+                        break;
+                    case "3":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ██████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ╚════██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("  █████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("  ╚═══██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write(" ██████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write(" ╚═════╝  ");
+                        StringLength += 10;
+                        break;
+                    case "4":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ██╗  ██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ██║  ██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write(" ███████║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write(" ╚════██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("      ██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("      ╚═╝ ");
+                        StringLength += 10;
+                        break;
+                    case "5":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ███████╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ██╔════╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write(" ███████╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write(" ╚════██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write(" ███████║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write(" ╚══════╝ ");
+                        StringLength += 10;
+                        break;
+                    case "6":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ██████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write("██╔════╝  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("███████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("██╔═══██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("╚██████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write(" ╚═════╝  ");
+                        StringLength += 10;
+                        break;
+                    case "7":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write(" ███████╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ╚════██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("     ██╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("    ██╔╝  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("    ██║   ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("    ╚═╝   ");
+                        StringLength += 10;
+                        break;
+                    case "8":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write("  █████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ██╔══██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write(" ╚█████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write(" ██╔══██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write(" ╚█████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("  ╚════╝  ");
+                        StringLength += 10;
+                        break;
+                    case "9":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write("  █████╗  ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ██╔══██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write(" ╚██████║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("  ╚═══██║ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("  █████╔╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("  ╚════╝  ");
+                        StringLength += 10;
+                        break;
+                    case ":":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write(" ██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write(" ╚═╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write(" ██╗ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write(" ╚═╝ ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("     ");
+                        StringLength += 5;
+                        break;
+                    case " ":
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 0); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 1); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 2); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 3); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 4); Console.Write("     ");
+                        Console.SetCursorPosition(Position.X + StringLength, Position.Y + 5); Console.Write("     ");
+                        StringLength += 5;
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         #region IDisposable Support

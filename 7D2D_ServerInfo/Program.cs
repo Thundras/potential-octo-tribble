@@ -36,10 +36,11 @@ namespace _7D2D_ServerInfo
             IGUI GUI = new GUI_Console(i);
 
             do
-            { 
-                i.Refresh();
-
-                GUI.Draw();
+            {
+                if (i.Refresh())
+                    GUI.Draw();
+                else
+                    GUI.DrawConnectionError();
 
                 System.Threading.Thread.Sleep((int)(60f / 24f * 1000f));
 

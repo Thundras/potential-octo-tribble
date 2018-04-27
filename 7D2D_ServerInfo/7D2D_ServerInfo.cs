@@ -123,17 +123,17 @@ namespace _7D2D_ServerInfo
 
             debug = Debug;
             if (Debug == false)
-                Con = new ConnectionUDP( "185.239.237.61", 37018);
+                Con = new ConnectionUDP("185.239.237.61", 37018);
             else
                 Con = new ConnectionUDP();
             Refresh();
         }
 
-        public void Refresh()
+        public bool Refresh()
         {
             if ((DateTime.Now - LastUpdate).TotalMilliseconds > 30000)
             {
-                Fill();
+                if ( !Fill()) return false;
                 LastUpdate = DateTime.Now;
             }
             else
@@ -141,12 +141,13 @@ namespace _7D2D_ServerInfo
                 if (CurrentPlayers > 0) CurrentServerTime += 16;
             }
             CalcCurrentServerTime();
+            return true;
         }
 
-        private void Fill()
+        private bool Fill()
         {
             byte[] receivedData = Con.Refresh();
-            if (receivedData is null) return;
+            if (receivedData is null) return false;
             string Info = System.Text.Encoding.Default.GetString(receivedData);
             string[] list = Info.Split(new Char[] { (char)0 });
 
@@ -156,6 +157,7 @@ namespace _7D2D_ServerInfo
                 _propertyInfo.SetValue(this, CastPropertyValue(_propertyInfo, list[i + 1]), null);
             }
             if (debug == true) CurrentPlayers = 1;
+            return true;
         }
 
         private void CalcCurrentServerTime()
@@ -166,7 +168,7 @@ namespace _7D2D_ServerInfo
             CurrentServerTimeMins = (int)((float)((float)(CurrentServerTime % 1000) * 60) / 1000);
             CurrentServerTimeNextBloodMoon = (7 - (CurrentServerTimeDays % 7)) % 7;
             CurrentServerTimeNextSupply = ((AirDropFrequency / 24) - CurrentServerTimeDays % (AirDropFrequency / 24) + 1) % (AirDropFrequency / 24);
-            CurrentServerTimeDate = CurrentServerTimeDateInitial.AddDays(CurrentServerTimeDays);
+            CurrentServerTimeDate = CurrentServerTimeDateInitial.AddDays(CurrentServerTimeDays - 1);
 
             CurrentServerTimeYear = CurrentServerTimeDate.Year - CurrentServerTimeDateInitial.Year + 1;
             CurrentServerTimeMonth = CurrentServerTimeDate.Month;
@@ -187,11 +189,20 @@ namespace _7D2D_ServerInfo
             return (new DateTime(CurrentServerTimeDate.AddMonths(MonthDuration).Year, CurrentServerTimeDate.AddMonths(MonthDuration).Month, 1)).AddDays(-1);
         }
 
+        public bool IsBloodMoon(DateTime Date)
+        {
+            return IsBloodMoon((Date - CurrentServerTimeDateInitial).Days + 1);
+        }
+
         public bool IsBloodMoon(int Day)
         {
             return ((7 - (Day % 7)) % 7) == 0;
         }
 
+        public bool IsAirdrop(DateTime Date)
+        {
+            return IsAirdrop((Date - CurrentServerTimeDateInitial).Days + 1);
+        }
         public bool IsAirdrop(int Day)
         {
             return (((AirDropFrequency / 24) - Day % (AirDropFrequency / 24) + 1) % (AirDropFrequency / 24)) == 0;

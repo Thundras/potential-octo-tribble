@@ -9,5 +9,6 @@ namespace _7D2D_ServerInfo
     interface IGUI:IDisposable
     {
         void Draw();
+        void DrawConnectionError();
     }
 }
