@@ -23,8 +23,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://github.com/Thundras/potential-octo-tribble/master/7D2D_ServerInfo/publish/</InstallUrl>
-    <ApplicationRevision>7</ApplicationRevision>
+    <InstallUrl>https://github.com/Thundras/potential-octo-tribble/raw/master/7D2D_ServerInfo/publish/</InstallUrl>
+    <ApplicationRevision>8</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
