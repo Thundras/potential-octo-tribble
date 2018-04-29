@@ -14,15 +14,19 @@ namespace _7D2D_ServerInfo
         private const int MaxCharactersPerDay = 6;
         _7D2D_ServerInfo _ServerInfo;
 
+        private bool bError = false;
+
         public GUI_Console(_7D2D_ServerInfo _ServerInfo)
         {
             this._ServerInfo = _ServerInfo;
             Console.WindowWidth = 111; // MaxDaysHorizontal * MaxCharactersPerDay -3;
             Console.WindowHeight = 20;
+            Console.CursorVisible = false;
         }
 
         public void Draw()
         {
+            if (bError == true) bError = false; Console.Clear();
             var OffsetY = 0;
             //for (var CurrentDay = 0; CurrentDay < MaxDaysHorizontal; CurrentDay++)
             //{
@@ -155,7 +159,8 @@ namespace _7D2D_ServerInfo
         public void DrawConnectionError()
         {
             //Console.Clear();
-            //Console.ResetColor();
+            if (bError == false) bError = true; Console.Clear();
+            Console.ResetColor();
             Console.WriteLine($"{DateTime.Now.ToString()}: Fehler beim herstellen der Verbindung.");
             Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
         }
