@@ -10,5 +10,6 @@ namespace _7D2D_ServerInfo
     {
         void Draw();
         void DrawConnectionError();
+        bool UpdateAvailable { get; set; }
     }
 }

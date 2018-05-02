@@ -12,20 +12,26 @@ namespace _7D2D_ServerInfo
     {
         private const int MaxDaysHorizontal = 19;
         private const int MaxCharactersPerDay = 6;
+
         _7D2D_ServerInfo _ServerInfo;
 
         private bool bError = false;
+
+        public bool UpdateAvailable { get; set; }
 
         public GUI_Console(_7D2D_ServerInfo _ServerInfo)
         {
             this._ServerInfo = _ServerInfo;
             Console.WindowWidth = 111; // MaxDaysHorizontal * MaxCharactersPerDay -3;
-            Console.WindowHeight = 20;
+            Console.WindowHeight = 21;
             Console.CursorVisible = false;
         }
 
         public void Draw()
         {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
+
             if (bError == true) bError = false; Console.Clear();
             var OffsetY = 0;
             //for (var CurrentDay = 0; CurrentDay < MaxDaysHorizontal; CurrentDay++)
@@ -61,9 +67,6 @@ namespace _7D2D_ServerInfo
             //        Console.Write(" A ");
             //    }
             //}
-
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.BackgroundColor = ConsoleColor.Black;
 
             OffsetY = 1;
 
@@ -150,6 +153,7 @@ namespace _7D2D_ServerInfo
 
             }
 
+            DrawUpdateInfo();
             //Console.ForegroundColor = ConsoleColor.Gray;
             //Console.BackgroundColor = ConsoleColor.Black;
             //String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29, 1));
@@ -160,9 +164,24 @@ namespace _7D2D_ServerInfo
         {
             //Console.Clear();
             if (bError == false) bError = true; Console.Clear();
-            Console.ResetColor();
+            //Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
             Console.WriteLine($"{DateTime.Now.ToString()}: Fehler beim herstellen der Verbindung.");
             Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
+        }
+
+        private void DrawUpdateInfo()
+        {
+            //Console.Clear();
+            if (UpdateAvailable == true)
+            {
+                Console.SetCursorPosition(3, 19);
+                //Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.BackgroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Es Ist ein Update verfügbar! Bitte starte die Anwendung neu um es zu installieren.");
+            }
         }
 
         private void String2ASCII(string Text, Point Position)
