@@ -8,31 +8,48 @@ using System.Threading.Tasks;
 
 namespace _7D2D_ServerInfo
 {
+    /// <summary>
+    /// Console-based UI renderer that draws server status and an in-game calendar.
+    /// </summary>
     class GUI_Console : IGUI
     {
         private const int MaxDaysHorizontal = 19;
         private const int MaxCharactersPerDay = 6;
 
-        _7D2D_ServerInfo _ServerInfo;
+        // Reference to the data provider used for rendering the console UI.
+        private readonly _7D2D_ServerInfo _ServerInfo;
 
         private bool bError = false;
 
         public bool UpdateAvailable { get; set; }
 
+        /// <summary>
+        /// Creates a new console UI bound to a server info data source.
+        /// </summary>
+        /// <param name="_ServerInfo">Server info provider used for rendering.</param>
         public GUI_Console(_7D2D_ServerInfo _ServerInfo)
         {
             this._ServerInfo = _ServerInfo;
+            // Fix the window size so the UI aligns with the ASCII calendar layout.
             Console.WindowWidth = 111; // MaxDaysHorizontal * MaxCharactersPerDay -3;
             Console.WindowHeight = 21;
             Console.CursorVisible = false;
         }
 
+        /// <summary>
+        /// Draws the full UI layout to the console.
+        /// </summary>
         public void Draw()
         {
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
 
-            if (bError == true) bError = false; Console.Clear();
+            // Only clear the screen when recovering from an error state to reduce flicker.
+            if (bError == true)
+            {
+                bError = false;
+                Console.Clear();
+            }
             var OffsetY = 0;
             //for (var CurrentDay = 0; CurrentDay < MaxDaysHorizontal; CurrentDay++)
             //{
@@ -76,13 +93,13 @@ namespace _7D2D_ServerInfo
             Console.SetCursorPosition(3, OffsetY + 3); Console.WriteLine($"Server Zeit : {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}");
             Console.SetCursorPosition(3, OffsetY + 4); Console.WriteLine($"Spieler     : {_ServerInfo.CurrentPlayers}/{_ServerInfo.MaxPlayers}");
 
+            // The calendar begins on the first day of the current in-game month.
             DateTime CalendarStart = _ServerInfo.GetCalendarStart();
-            DateTime CalendarEnd = _ServerInfo.GetCalendarEnd(5);
 
 
             OffsetY = 7;
+            // Use the current culture for month names and week numbers.
             CultureInfo cultureInfo = CultureInfo.CurrentCulture; //new CultureInfo("de-DE");
-            var tmp = cultureInfo.Calendar.GetWeekOfYear(new DateTime(2018, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             for (var MonthIndex = 0; MonthIndex < 5; MonthIndex++)
             {
                 var curMonthDate = CalendarStart.AddMonths(MonthIndex);
@@ -137,6 +154,7 @@ namespace _7D2D_ServerInfo
                             else
                                 Console.ForegroundColor = ConsoleColor.Gray;
 
+                            // Highlight the current in-game day and render the ASCII time banner.
                             if (_ServerInfo.CurrentServerTimeDays == (Day - _ServerInfo.CurrentServerTimeDateInitial).Days + 1)
                             {
                                 String2ASCII($"{_ServerInfo.CurrentServerTimeDays} {_ServerInfo.CurrentServerTimeHours:D2}:{_ServerInfo.CurrentServerTimeMins:D2}", new Point(29, 1));
@@ -144,7 +162,9 @@ namespace _7D2D_ServerInfo
                                 Console.BackgroundColor = Console.ForegroundColor;
                                 Console.ForegroundColor = color;
                             }
-                                Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 11 + DayIndex); Console.Write($"{Day.Day,2}");
+                            // Render the day number in its calendar cell.
+                            Console.SetCursorPosition(21 * MonthIndex + 3 + WeekIndex * 3 + 3, 11 + DayIndex);
+                            Console.Write($"{Day.Day,2}");
                         }
                         Day = Day.AddDays(1);
                     }
@@ -160,10 +180,18 @@ namespace _7D2D_ServerInfo
 
         }
 
+        /// <summary>
+        /// Draws an error message when the server cannot be reached.
+        /// </summary>
         public void DrawConnectionError()
         {
             //Console.Clear();
-            if (bError == false) bError = true; Console.Clear();
+            // Clear the screen once when entering an error state to avoid overlay artifacts.
+            if (bError == false)
+            {
+                bError = true;
+                Console.Clear();
+            }
             //Console.ResetColor();
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -171,6 +199,9 @@ namespace _7D2D_ServerInfo
             Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
         }
 
+        /// <summary>
+        /// Renders update availability information in the status area.
+        /// </summary>
         private void DrawUpdateInfo()
         {
             //Console.Clear();
@@ -184,6 +215,11 @@ namespace _7D2D_ServerInfo
             }
         }
 
+        /// <summary>
+        /// Renders a string using ASCII art digits at the specified console position.
+        /// </summary>
+        /// <param name="Text">Text to render.</param>
+        /// <param name="Position">Top-left position for the ASCII art.</param>
         private void String2ASCII(string Text, Point Position)
         {
             var StringLength = 0;

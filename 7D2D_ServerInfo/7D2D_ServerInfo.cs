@@ -8,8 +8,14 @@ using System.Threading.Tasks;
 
 namespace _7D2D_ServerInfo
 {
+    /// <summary>
+    /// Represents the parsed state of a 7DTD server query response.
+    /// </summary>
     class _7D2D_ServerInfo
     {
+        /// <summary>
+        /// Enumeration for drop-on-death behaviors.
+        /// </summary>
         public enum enumDropOnDeath
         {
             Everything = 0,
@@ -17,6 +23,9 @@ namespace _7D2D_ServerInfo
             Backpack_Only = 2,
             Delete_All = 3
         }
+        /// <summary>
+        /// Enumeration for drop-on-quit behaviors.
+        /// </summary>
         public enum enumDropOnQuit
         {
             Nothing = 0,
@@ -24,6 +33,9 @@ namespace _7D2D_ServerInfo
             Toolbelt_Only = 2,
             Backpack_Only = 3
         }
+        /// <summary>
+        /// Enumeration for game difficulty settings.
+        /// </summary>
         public enum enumGameDifficulty
         {
             Scavenger = 0, //(0): Easiest setting designed for noobs. - Easiest
@@ -33,6 +45,9 @@ namespace _7D2D_ServerInfo
             Survivalist = 4, //(4) : Kids don't try this at home! - Harder
             Insane = 5  //(5) : You're one brave Mother! - Hardest
         }
+        /// <summary>
+        /// Enumeration for player killing mode settings.
+        /// </summary>
         public enum enumPlayerKillingMode
         {
             No_Killing = 0, //No Killing: Players cannot damage one another under any circumstances.
@@ -40,6 +55,9 @@ namespace _7D2D_ServerInfo
             Kill_Strangers_Only = 2, //Kill Strangers Only: Players can damage eachother UNLESS they are Allies.
             Kill_Everyone = 3 //Kill Everyone: Players can damage everyone, regardless of Allied status
         }
+        /// <summary>
+        /// Enumeration for zombie run behavior.
+        /// </summary>
         public enum enumZombieRun
         {
             Default = 0, //Default - This setting will make the Zombies walk in the daytime and run at night.
@@ -116,8 +134,22 @@ namespace _7D2D_ServerInfo
         private readonly IConnection Con;
 
         private readonly bool debug = false;
+        /// <summary>
+        /// Creates a server info instance using a default remote connection.
+        /// </summary>
         public _7D2D_ServerInfo(): this(new ConnectionUDP("185.239.237.61", 37018), false) {}
+
+        /// <summary>
+        /// Creates a server info instance using debug or live connection defaults.
+        /// </summary>
+        /// <param name="Debug">When true, uses the debug connection with sample data.</param>
         public _7D2D_ServerInfo(bool Debug): this(Debug ? new ConnectionUDP() : new ConnectionUDP("185.239.237.61", 37018), Debug) {}
+
+        /// <summary>
+        /// Creates a server info instance for a specific connection.
+        /// </summary>
+        /// <param name="connection">Connection implementation used to query the server.</param>
+        /// <param name="Debug">Whether to run in debug mode.</param>
         public _7D2D_ServerInfo(IConnection connection, bool Debug)
         {
             CurrentServerTimeDateInitial = new DateTime(2018, 1, 1);
@@ -127,6 +159,10 @@ namespace _7D2D_ServerInfo
             Refresh();
         }
 
+        /// <summary>
+        /// Refreshes the server info, throttling network calls to reduce load.
+        /// </summary>
+        /// <returns><c>true</c> if the refresh succeeded; otherwise <c>false</c>.</returns>
         public bool Refresh()
         {
             if ((DateTime.Now - LastUpdate).TotalMilliseconds > 30000)
@@ -142,6 +178,10 @@ namespace _7D2D_ServerInfo
             return true;
         }
 
+        /// <summary>
+        /// Fills properties by parsing the raw UDP response into key/value pairs.
+        /// </summary>
+        /// <returns><c>true</c> if parsing succeeded; otherwise <c>false</c>.</returns>
         private bool Fill()
         {
             byte[] receivedData = Con.Refresh();
@@ -149,15 +189,27 @@ namespace _7D2D_ServerInfo
             string Info = System.Text.Encoding.Default.GetString(receivedData);
             string[] list = Info.Split(new Char[] { (char)0 });
 
+            // The response is a sequence of key/value pairs separated by null bytes.
+            // Iterate over the pairs and map them to properties on this instance.
             for (var i = 1; i < list.Length - 1; i += 2)
             {
                 PropertyInfo _propertyInfo = GetType().GetProperty(list[i]);
+                if (_propertyInfo is null)
+                {
+                    // Ignore unknown fields so the parser stays compatible with new server keys.
+                    continue;
+                }
+
+                // Convert the raw string value into the target property type.
                 _propertyInfo.SetValue(this, CastPropertyValue(_propertyInfo, list[i + 1]), null);
             }
             if (debug == true) CurrentPlayers = 1;
             return true;
         }
 
+        /// <summary>
+        /// Calculates derived time values based on the server time counter.
+        /// </summary>
         private void CalcCurrentServerTime()
         {
             //CurrentServerTime = 13172166;
@@ -173,25 +225,43 @@ namespace _7D2D_ServerInfo
             CurrentServerTimeDay = CurrentServerTimeDate.Day;
         }
 
+        /// <summary>
+        /// Gets the first day of the current in-game month.
+        /// </summary>
         public DateTime GetCalendarStart()
         {
             return new DateTime(CurrentServerTimeDate.Year, CurrentServerTimeDate.Month, 1);
         }
+        /// <summary>
+        /// Gets the end date of the default calendar window.
+        /// </summary>
         public DateTime GetCalendarEnd()
         {
             return GetCalendarEnd(5);
         }
 
+        /// <summary>
+        /// Gets the end date of a calendar window with the specified month duration.
+        /// </summary>
+        /// <param name="MonthDuration">Number of months to include in the calendar.</param>
         public DateTime GetCalendarEnd(int MonthDuration)
         {
             return (new DateTime(CurrentServerTimeDate.AddMonths(MonthDuration).Year, CurrentServerTimeDate.AddMonths(MonthDuration).Month, 1)).AddDays(-1);
         }
 
+        /// <summary>
+        /// Checks whether the given date is a blood moon day.
+        /// </summary>
+        /// <param name="Date">Date to evaluate.</param>
         public bool IsBloodMoon(DateTime Date)
         {
             return IsBloodMoon((Date - CurrentServerTimeDateInitial).Days + 1);
         }
 
+        /// <summary>
+        /// Checks whether the given in-game day number is a blood moon day.
+        /// </summary>
+        /// <param name="Day">In-game day number.</param>
         public bool IsBloodMoon(int Day)
         {
             return ((7 - (Day % 7)) % 7) == 0;
