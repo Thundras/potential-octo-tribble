@@ -17,10 +17,14 @@ namespace _7D2D_ServerInfo
         {
             Debug = true;
         }
-        public ConnectionUDP(string IP, int Port)
+        public ConnectionUDP(string host, int port)
         {
-            ep = new IPEndPoint(IPAddress.Parse(IP), Port + 1);
-            
+            if (!IPAddress.TryParse(host, out var ipAddress))
+            {
+                ipAddress = Dns.GetHostAddresses(host).First();
+            }
+
+            ep = new IPEndPoint(ipAddress, port + 1);
         }
         public byte[] Refresh()
         {

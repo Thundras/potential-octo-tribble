@@ -1,0 +1,7 @@
+{
+  "serverHost": "127.0.0.1",
+  "serverPort": 26900,
+  "refreshIntervalSeconds": 2.5,
+  "updateAppCastUrl": "https://github.com/your-org/your-repo/releases/latest/download/appcast.xml",
+  "updatePublicKey": "PASTE_YOUR_NETSPARKLE_PUBLIC_KEY_HERE"
+}
