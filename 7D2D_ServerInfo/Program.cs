@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace _7D2D_ServerInfo
         // The remote JSON configuration is hosted on GitHub, allowing the app to
         // bootstrap without a dedicated backend service.
         private static readonly Uri RemoteConfigUri = new("https://raw.githubusercontent.com/Thundras/potential-octo-tribble/main/config/server-config.json");
+        private static readonly string LocalConfigPath = Path.Combine(AppContext.BaseDirectory, "config", "server-config.json");
 
         /// <summary>
         /// Main entry for the console application.
@@ -54,13 +56,32 @@ namespace _7D2D_ServerInfo
             {
                 // Delegate the actual fetch and JSON parsing to the loader so we can
                 // centralize HTTP settings (timeouts, shared HttpClient, etc.).
-                return await RemoteConfigLoader.LoadAsync(RemoteConfigUri, cancellationToken);
+                var remoteConfig = await RemoteConfigLoader.LoadAsync(RemoteConfigUri, cancellationToken);
+                if (remoteConfig is not null)
+                {
+                    return remoteConfig;
+                }
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Failed to load remote config: {ex.Message}");
-                return null;
             }
+
+            try
+            {
+                var localConfig = await RemoteConfigLoader.LoadFromFileAsync(LocalConfigPath, cancellationToken);
+                if (localConfig is not null)
+                {
+                    Console.Error.WriteLine("Loaded local config fallback.");
+                    return localConfig;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to load local config: {ex.Message}");
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -76,9 +97,18 @@ namespace _7D2D_ServerInfo
 
             _ = UpdateBootstrapper.TryStart(config);
 
-            IConnection connection = debug
-                ? new ConnectionUDP()
-                : new ConnectionUDP(config.ServerHost, config.ServerPort);
+            IConnection connection;
+            try
+            {
+                connection = debug
+                    ? new ConnectionUDP()
+                    : new ConnectionUDP(config.ServerHost, config.ServerPort);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to initialize connection: {ex.Message}");
+                return;
+            }
 
             _7D2D_ServerInfo serverInfo = new _7D2D_ServerInfo(connection, debug);
             IGUI gui = new GUI_Console(serverInfo);

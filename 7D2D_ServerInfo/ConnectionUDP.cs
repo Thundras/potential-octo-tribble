@@ -83,6 +83,11 @@ namespace _7D2D_ServerInfo
 
                     // The second response provides the challenge token for the query.
                     var receivedData2 = client.Receive(ref remoteEndpoint);
+                    if (receivedData2.Length < 9)
+                    {
+                        Console.Error.WriteLine("UDP query failed: challenge response was too short.");
+                        return null;
+                    }
 
                     b = new byte[] { 0xff, 0xff, 0xff, 0xff, 0x56, receivedData2[5], receivedData2[6], receivedData2[7], receivedData2[8] };
 

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 
@@ -49,6 +50,23 @@ namespace _7D2D_ServerInfo
             // Download the raw JSON stream and deserialize it directly to reduce
             // memory overhead from intermediate string allocations.
             await using var stream = await HttpClient.GetStreamAsync(configUri, cancellationToken);
+            return await JsonSerializer.DeserializeAsync<RemoteConfig>(stream, SerializerOptions, cancellationToken);
+        }
+
+        /// <summary>
+        /// Loads configuration from a local JSON file if available.
+        /// </summary>
+        /// <param name="configPath">Path to the local configuration JSON.</param>
+        /// <param name="cancellationToken">Token to cancel the file read.</param>
+        /// <returns>The deserialized <see cref="RemoteConfig"/> or <c>null</c> if deserialization fails.</returns>
+        public static async Task<RemoteConfig?> LoadFromFileAsync(string configPath, CancellationToken cancellationToken)
+        {
+            if (!File.Exists(configPath))
+            {
+                return null;
+            }
+
+            await using var stream = File.OpenRead(configPath);
             return await JsonSerializer.DeserializeAsync<RemoteConfig>(stream, SerializerOptions, cancellationToken);
         }
     }

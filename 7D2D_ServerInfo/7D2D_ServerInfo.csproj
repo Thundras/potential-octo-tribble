@@ -15,4 +15,9 @@
   <ItemGroup>
     <InternalsVisibleTo Include="7D2D_ServerInfo.Tests" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\config\server-config.json" Link="config\server-config.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\config\appcast.xml" Link="config\appcast.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

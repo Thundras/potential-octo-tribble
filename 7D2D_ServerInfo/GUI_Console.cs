@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,8 +32,23 @@ namespace _7D2D_ServerInfo
         {
             this._ServerInfo = _ServerInfo;
             // Fix the window size so the UI aligns with the ASCII calendar layout.
-            Console.WindowWidth = 111; // MaxDaysHorizontal * MaxCharactersPerDay -3;
-            Console.WindowHeight = 21;
+            try
+            {
+                var width = Math.Min(111, Console.LargestWindowWidth);
+                var height = Math.Min(21, Console.LargestWindowHeight);
+                if (width > 0 && height > 0)
+                {
+                    Console.WindowWidth = width; // MaxDaysHorizontal * MaxCharactersPerDay -3;
+                    Console.WindowHeight = height;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+
             Console.CursorVisible = false;
         }
 

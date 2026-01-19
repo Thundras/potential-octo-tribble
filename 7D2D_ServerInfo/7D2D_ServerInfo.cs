@@ -217,7 +217,10 @@ namespace _7D2D_ServerInfo
             CurrentServerTimeHours = (int)((float)((CurrentServerTime % 24000) / 1000));
             CurrentServerTimeMins = (int)((float)((float)(CurrentServerTime % 1000) * 60) / 1000);
             CurrentServerTimeNextBloodMoon = (7 - (CurrentServerTimeDays % 7)) % 7;
-            CurrentServerTimeNextSupply = ((AirDropFrequency / 24) - CurrentServerTimeDays % (AirDropFrequency / 24) + 1) % (AirDropFrequency / 24);
+            var airdropIntervalDays = GetAirdropIntervalDays();
+            CurrentServerTimeNextSupply = airdropIntervalDays <= 0
+                ? 0
+                : (airdropIntervalDays - CurrentServerTimeDays % airdropIntervalDays + 1) % airdropIntervalDays;
             CurrentServerTimeDate = CurrentServerTimeDateInitial.AddDays(CurrentServerTimeDays - 1);
 
             CurrentServerTimeYear = CurrentServerTimeDate.Year - CurrentServerTimeDateInitial.Year + 1;
@@ -273,13 +276,23 @@ namespace _7D2D_ServerInfo
         }
         public bool IsAirdrop(int Day)
         {
-            return (((AirDropFrequency / 24) - Day % (AirDropFrequency / 24) + 1) % (AirDropFrequency / 24)) == 0;
+            var airdropIntervalDays = GetAirdropIntervalDays();
+            if (airdropIntervalDays <= 0)
+                return false;
+
+            return ((airdropIntervalDays - Day % airdropIntervalDays + 1) % airdropIntervalDays) == 0;
         }
 
         public object CastPropertyValue(PropertyInfo property, string value)
         {
-            if (property == null || String.IsNullOrEmpty(value))
+            if (property == null)
                 return null;
+            if (String.IsNullOrEmpty(value))
+            {
+                if (property.PropertyType.IsValueType)
+                    return Activator.CreateInstance(property.PropertyType);
+                return null;
+            }
             if (property.PropertyType.IsEnum)
             {
                 Type enumType = property.PropertyType;
@@ -287,14 +300,22 @@ namespace _7D2D_ServerInfo
                 if (Enum.IsDefined(enumType, value))
                     return Enum.Parse(enumType, value);
                 else if (Int32.TryParse(value, out tmp))
-                    return tmp;
+                    return Enum.ToObject(enumType, tmp);
             }
             if (property.PropertyType == typeof(bool))
-                return value == "1" || value.ToLower() == "True".ToLower();
+                return value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
             else if (property.PropertyType == typeof(Uri))
                 return new Uri(Convert.ToString(value));
             else
                 return Convert.ChangeType(value, property.PropertyType);
+        }
+
+        private int GetAirdropIntervalDays()
+        {
+            if (AirDropFrequency <= 0)
+                return 0;
+
+            return AirDropFrequency / 24;
         }
     }
 }
