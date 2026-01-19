@@ -4,20 +4,35 @@ using System.Threading.Tasks;
 
 namespace _7D2D_ServerInfo
 {
+    /// <summary>
+    /// Application entry point that orchestrates configuration loading and UI refresh.
+    /// </summary>
     class Program
     {
+        // The remote JSON configuration is hosted on GitHub, allowing the app to
+        // bootstrap without a dedicated backend service.
         private static readonly Uri RemoteConfigUri = new("https://raw.githubusercontent.com/Thundras/potential-octo-tribble/main/config/server-config.json");
 
+        /// <summary>
+        /// Main entry for the console application.
+        /// </summary>
+        /// <param name="args">Command-line arguments passed to the process.</param>
+        /// <returns>A task representing the asynchronous startup work.</returns>
         static async Task Main(string[] args)
         {
             bool debug = ProgramHelpers.IsDebugMode(args);
-            RemoteConfig? config = await TryLoadConfigAsync();
+            // Protect startup from hanging network calls by applying a hard timeout
+            // to the initial configuration fetch.
+            using var configCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            RemoteConfig? config = await TryLoadConfigAsync(configCts.Token);
             if (config is null)
             {
                 Console.Error.WriteLine("Remote config was empty or invalid.");
                 return;
             }
 
+            // Create a linked cancellation source that is triggered on Ctrl+C to
+            // allow the refresh loop to exit gracefully.
             using var cancellation = new CancellationTokenSource();
             Console.CancelKeyPress += (_, eventArgs) =>
             {
@@ -28,11 +43,18 @@ namespace _7D2D_ServerInfo
             await RunAsync(config, debug, cancellation.Token);
         }
 
-        private static async Task<RemoteConfig?> TryLoadConfigAsync()
+        /// <summary>
+        /// Attempts to load the remote configuration, returning <c>null</c> on failure.
+        /// </summary>
+        /// <param name="cancellationToken">Token used to cancel the HTTP request.</param>
+        /// <returns>The remote configuration if loaded successfully; otherwise <c>null</c>.</returns>
+        private static async Task<RemoteConfig?> TryLoadConfigAsync(CancellationToken cancellationToken)
         {
             try
             {
-                return await RemoteConfigLoader.LoadAsync(RemoteConfigUri, CancellationToken.None);
+                // Delegate the actual fetch and JSON parsing to the loader so we can
+                // centralize HTTP settings (timeouts, shared HttpClient, etc.).
+                return await RemoteConfigLoader.LoadAsync(RemoteConfigUri, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -41,6 +63,13 @@ namespace _7D2D_ServerInfo
             }
         }
 
+        /// <summary>
+        /// Runs the main refresh loop until cancellation is requested.
+        /// </summary>
+        /// <param name="config">Remote configuration values.</param>
+        /// <param name="debug">Whether to use debug/sample data instead of live UDP.</param>
+        /// <param name="cancellationToken">Token to stop the loop.</param>
+        /// <returns>A task representing the asynchronous loop.</returns>
         private static async Task RunAsync(RemoteConfig config, bool debug, CancellationToken cancellationToken)
         {
             Console.Title = $"7 Days to Die - Horde & Airdrop Viewer - {config.ServerHost}:{config.ServerPort}";
