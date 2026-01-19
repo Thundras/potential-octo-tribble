@@ -11,4 +11,8 @@
   <ItemGroup>
     <PackageReference Include="NetSparkleUpdater" Version="2.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="7D2D_ServerInfo.Tests" />
+  </ItemGroup>
 </Project>
