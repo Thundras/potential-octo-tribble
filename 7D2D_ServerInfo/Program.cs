@@ -1,31 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Deployment.Application;
 using System.Threading;
-using System.Runtime.InteropServices;
 
 namespace _7D2D_ServerInfo
 {
     class Program
     {
-        const int SearchForUpdateDelayInMin = 15;
+        private static readonly Uri RemoteConfigUri = new("https://raw.githubusercontent.com/Thundras/potential-octo-tribble/main/config/server-config.json");
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            DateTime LastUpdateCheck = DateTime.Now;
-
-            //new Thread(() => new Form1().ShowDialog()).Start();
-
-            var Version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
-
-            Console.Title = $"7 Days to die - Horde & Airdrop Viewer - {Version}";
-
             bool debug = false;
             foreach (string arg in args)
             {
@@ -33,7 +16,32 @@ namespace _7D2D_ServerInfo
                     debug = true;
             }
 
-            _7D2D_ServerInfo i = new _7D2D_ServerInfo(debug);
+            RemoteConfig? config = null;
+            try
+            {
+                config = await RemoteConfigLoader.LoadAsync(RemoteConfigUri, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to load remote config: {ex.Message}");
+                return;
+            }
+
+            if (config is null)
+            {
+                Console.Error.WriteLine("Remote config was empty or invalid.");
+                return;
+            }
+
+            Console.Title = $"7 Days to Die - Horde & Airdrop Viewer - {config.ServerHost}:{config.ServerPort}";
+
+            _ = UpdateBootstrapper.TryStart(config);
+
+            IConnection connection = debug
+                ? new ConnectionUDP()
+                : new ConnectionUDP(config.ServerHost, config.ServerPort);
+
+            _7D2D_ServerInfo i = new _7D2D_ServerInfo(connection, debug);
             IGUI GUI = new GUI_Console(i);
 
             do
@@ -43,58 +51,8 @@ namespace _7D2D_ServerInfo
                 else
                     GUI.DrawConnectionError();
 
-                System.Threading.Thread.Sleep((int)(60f / 24f * 1000f));
-
-                if (GUI.UpdateAvailable == false && (DateTime.Now - LastUpdateCheck).Minutes >= SearchForUpdateDelayInMin) 
-                {
-                    if (CheckForUpdate()) GUI.UpdateAvailable = true;
-                    LastUpdateCheck = DateTime.Now;
-                }
+                System.Threading.Thread.Sleep(TimeSpan.FromSeconds(config.RefreshIntervalSeconds));
             } while (true);
-        }
-
-        private static bool CheckForUpdate()
-        {
-            UpdateCheckInfo info = null;
-
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                ApplicationDeployment ad = ApplicationDeployment.CurrentDeployment;
-
-                try
-                {
-                    info = ad.CheckForDetailedUpdate();
-
-                }
-                catch (DeploymentDownloadException dde)
-                {
-                    //MessageBox.Show("The new version of the application cannot be downloaded at this time. \n\nPlease check your network connection, or try again later. Error: " + dde.Message);
-                    return false;
-                }
-                catch (InvalidDeploymentException ide)
-                {
-                    //MessageBox.Show("Cannot check for a new version of the application. The ClickOnce deployment is corrupt. Please redeploy the application and try again. Error: " + ide.Message);
-                    return false;
-                }
-                catch (InvalidOperationException ioe)
-                {
-                    //MessageBox.Show("This application cannot be updated. It is likely not a ClickOnce application. Error: " + ioe.Message);
-                    return false;
-                }
-
-                if (info.UpdateAvailable)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
         }
     }
 }

@@ -113,19 +113,17 @@ namespace _7D2D_ServerInfo
 
         public DateTime LastUpdate { get; private set; }
 
-        private IConnection Con;
+        private readonly IConnection Con;
 
-        bool debug = false;
-        public _7D2D_ServerInfo(): this(false) {}
-        public _7D2D_ServerInfo(bool Debug)
+        private readonly bool debug = false;
+        public _7D2D_ServerInfo(): this(new ConnectionUDP("185.239.237.61", 37018), false) {}
+        public _7D2D_ServerInfo(bool Debug): this(Debug ? new ConnectionUDP() : new ConnectionUDP("185.239.237.61", 37018), Debug) {}
+        public _7D2D_ServerInfo(IConnection connection, bool Debug)
         {
             CurrentServerTimeDateInitial = new DateTime(2018, 1, 1);
 
             debug = Debug;
-            if (Debug == false)
-                Con = new ConnectionUDP("185.239.237.61", 37018);
-            else
-                Con = new ConnectionUDP();
+            Con = connection;
             Refresh();
         }
 
