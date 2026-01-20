@@ -32,6 +32,14 @@ namespace _7D2D_ServerInfo
             // Fail fast on stalled network calls so the app can surface errors quickly.
             Timeout = TimeSpan.FromSeconds(10)
         };
+
+        private static readonly HttpClient LocalHttpClient = new(new HttpClientHandler
+        {
+            UseProxy = false
+        })
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
         private static readonly JsonSerializerOptions SerializerOptions = new()
         {
             // Accept case-insensitive JSON field names to reduce coupling to the
@@ -49,7 +57,8 @@ namespace _7D2D_ServerInfo
         {
             // Download the raw JSON stream and deserialize it directly to reduce
             // memory overhead from intermediate string allocations.
-            await using var stream = await HttpClient.GetStreamAsync(configUri, cancellationToken);
+            HttpClient client = configUri.IsLoopback ? LocalHttpClient : HttpClient;
+            await using var stream = await client.GetStreamAsync(configUri, cancellationToken);
             return await JsonSerializer.DeserializeAsync<RemoteConfig>(stream, SerializerOptions, cancellationToken);
         }
 
