@@ -36,6 +36,32 @@ namespace _7D2D_ServerInfo.Tests
             Assert.False(result);
         }
 
+        [Fact]
+        public void IsDebugMode_ReturnsFalseWhenArgsEmpty()
+        {
+            string[] args = Array.Empty<string>();
+
+            bool result = ProgramHelpers.IsDebugMode(args);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsDebugMode_ReturnsFalseWhenArgsContainNull()
+        {
+            string?[] args = { null };
+
+            bool result = ProgramHelpers.IsDebugMode(args!);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsDebugMode_ThrowsWhenArgsNull()
+        {
+            Assert.Throws<NullReferenceException>(() => ProgramHelpers.IsDebugMode(null!));
+        }
+
         [Theory]
         [InlineData(-1)]
         [InlineData(0)]
@@ -52,6 +78,21 @@ namespace _7D2D_ServerInfo.Tests
             TimeSpan delay = ProgramHelpers.GetRefreshDelay(2.5);
 
             Assert.Equal(TimeSpan.FromSeconds(2.5), delay);
+        }
+
+        [Theory]
+        [InlineData(double.NaN)]
+        [InlineData(double.PositiveInfinity)]
+        [InlineData(double.NegativeInfinity)]
+        public void GetRefreshDelay_ThrowsWhenNotFinite(double refreshIntervalSeconds)
+        {
+            Assert.ThrowsAny<Exception>(() => ProgramHelpers.GetRefreshDelay(refreshIntervalSeconds));
+        }
+
+        [Fact]
+        public void GetRefreshDelay_ThrowsWhenTooLarge()
+        {
+            Assert.ThrowsAny<Exception>(() => ProgramHelpers.GetRefreshDelay(double.MaxValue));
         }
     }
 }
