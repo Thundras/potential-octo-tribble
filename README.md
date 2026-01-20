@@ -12,6 +12,14 @@ It is based on **.NET 8** and loads its runtime configuration from GitHub (no de
 - Central configuration via GitHub JSON
 - Auto-updates via GitHub Releases (NetSparkle)
 
+### Production readiness
+
+See `docs/production-readiness.md` for the code review summary, operational notes, and production checklist.
+
+### Release notes
+
+See `docs/release-notes.md` for the changelog format and current release notes.
+
 ### Requirements
 
 - Windows (console app with Windows target)
@@ -77,6 +85,14 @@ Es basiert auf **.NET 8** und lädt seine Laufzeit-Konfiguration serverseitig ü
 - UDP-Query an den 7DTD-Server
 - Zentrale Konfiguration über GitHub-JSON
 - Auto-Updates über GitHub Releases (NetSparkle)
+
+### Production readiness
+
+See `docs/production-readiness.md` for the review summary, operational notes, and the production checklist.
+
+### Release notes
+
+See `docs/release-notes.md` for the changelog format and current release notes.
 
 ### Voraussetzungen
 

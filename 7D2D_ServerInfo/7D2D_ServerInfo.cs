@@ -71,8 +71,8 @@ namespace _7D2D_ServerInfo
         public int BlockDurabilityModifier { get; private set; }
         public int BloodMoonEnemyCount { get; private set; }
         public bool BuildCreate { get; private set; }
-        public string CompatibilityVersion { get; private set; }
-        public string CountryCode { get; private set; }
+        public string CompatibilityVersion { get; private set; } = string.Empty;
+        public string CountryCode { get; private set; } = string.Empty;
         public int CurrentPlayers { get; private set; }
         public int CurrentServerTime { get; private set; }
         public int DayCount { get; private set; }
@@ -84,11 +84,11 @@ namespace _7D2D_ServerInfo
         public int EnemyDifficulty { get; private set; }
         public bool EnemySpawnMode { get; private set; }
         public enumGameDifficulty GameDifficulty { get; private set; }
-        public string GameHost { get; private set; }
-        public string GameMode { get; private set; }
-        public string GameName { get; private set; }
-        public string GameType { get; private set; }
-        public string IP { get; private set; }
+        public string GameHost { get; private set; } = string.Empty;
+        public string GameMode { get; private set; } = string.Empty;
+        public string GameName { get; private set; } = string.Empty;
+        public string GameType { get; private set; } = string.Empty;
+        public string IP { get; private set; } = string.Empty;
         public bool IsDedicated { get; private set; }
         public bool IsPasswordProtected { get; private set; }
         public bool IsPublic { get; private set; }
@@ -98,24 +98,24 @@ namespace _7D2D_ServerInfo
         public int LandClaimOfflineDurabilityModifier { get; private set; }//LandClaimOfflineDurabilityModifier: 0
         public int LandClaimOnlineDurabilityModifier { get; private set; }//LandClaimOnlineDurabilityModifier: 0
         public int LandClaimSize { get; private set; }//LandClaimSize: 50
-        public string LevelName { get; private set; }//LevelName: Random Gen
+        public string LevelName { get; private set; } = string.Empty;//LevelName: Random Gen
         public int LootAbundance { get; private set; }//LootAbundance: 50
         public int LootRespawnDays { get; private set; }//LootRespawnDays: 7
         public int MaxPlayers { get; private set; }//MaxPlayers: 10
         public int MaxSpawnedAnimals { get; private set; }//MaxSpawnedAnimals: 50
         public int MaxSpawnedZombies { get; private set; }//MaxSpawnedZombies: 40
         public int Ping { get; private set; }//Ping: -1
-        public string Platform { get; private set; }//Platform: LinuxPlayer
+        public string Platform { get; private set; } = string.Empty;//Platform: LinuxPlayer
         public enumPlayerKillingMode PlayerKillingMode { get; private set; }//PlayerKillingMode: 2
         public int Port { get; private set; }//Port: 27260
         public bool RequiresMod { get; private set; }//RequiresMod: False
-        public string ServerDescription { get; private set; }//ServerDescription: Chaos
-        public string ServerWebsiteURL { get; private set; }//ServerWebsiteURL:
+        public string ServerDescription { get; private set; } = string.Empty;//ServerDescription: Chaos
+        public string ServerWebsiteURL { get; private set; } = string.Empty;//ServerWebsiteURL:
         public bool ShowFriendPlayerOnMap { get; private set; }//ShowFriendPlayerOnMap: True
-        public string SteamID { get; private set; }//SteamID: 90114274196415493
+        public string SteamID { get; private set; } = string.Empty;//SteamID: 90114274196415493
         public bool StockFiles { get; private set; }//StockFiles: False
         public bool StockSettings { get; private set; }//StockSettings: False
-        public string Version { get; private set; }//Version: Alpha 16.4
+        public string Version { get; private set; } = string.Empty;//Version: Alpha 16.4
         public enumZombieRun ZombiesRun { get; private set; }//ZombiesRun: 0
 
         public int CurrentServerTimeYear { get; private set; }
@@ -184,24 +184,32 @@ namespace _7D2D_ServerInfo
         /// <returns><c>true</c> if parsing succeeded; otherwise <c>false</c>.</returns>
         private bool Fill()
         {
-            byte[] receivedData = Con.Refresh();
+            byte[]? receivedData = Con.Refresh();
             if (receivedData is null) return false;
-            string Info = System.Text.Encoding.Default.GetString(receivedData);
+            string Info = System.Text.Encoding.Latin1.GetString(receivedData);
             string[] list = Info.Split(new Char[] { (char)0 });
 
             // The response is a sequence of key/value pairs separated by null bytes.
             // Iterate over the pairs and map them to properties on this instance.
             for (var i = 1; i < list.Length - 1; i += 2)
             {
-                PropertyInfo _propertyInfo = GetType().GetProperty(list[i]);
+                PropertyInfo? _propertyInfo = GetType().GetProperty(list[i]);
                 if (_propertyInfo is null)
                 {
                     // Ignore unknown fields so the parser stays compatible with new server keys.
                     continue;
                 }
 
-                // Convert the raw string value into the target property type.
-                _propertyInfo.SetValue(this, CastPropertyValue(_propertyInfo, list[i + 1]), null);
+                try
+                {
+                    // Convert the raw string value into the target property type.
+                    _propertyInfo.SetValue(this, CastPropertyValue(_propertyInfo, list[i + 1]), null);
+                }
+                catch (Exception ex)
+                {
+                    // Keep parsing even if an individual field is malformed.
+                    Console.Error.WriteLine($"Failed to parse value '{list[i + 1]}' for '{list[i]}': {ex.Message}");
+                }
             }
             if (debug == true) CurrentPlayers = 1;
             return true;
@@ -283,15 +291,11 @@ namespace _7D2D_ServerInfo
             return ((airdropIntervalDays - Day % airdropIntervalDays + 1) % airdropIntervalDays) == 0;
         }
 
-        public object CastPropertyValue(PropertyInfo property, string value)
+        public object? CastPropertyValue(PropertyInfo property, string value)
         {
-            if (property == null)
-                return null;
             if (String.IsNullOrEmpty(value))
             {
-                if (property.PropertyType.IsValueType)
-                    return Activator.CreateInstance(property.PropertyType);
-                return null;
+                return GetDefaultValue(property);
             }
             if (property.PropertyType.IsEnum)
             {
@@ -299,8 +303,9 @@ namespace _7D2D_ServerInfo
                 int tmp;
                 if (Enum.IsDefined(enumType, value))
                     return Enum.Parse(enumType, value);
-                else if (Int32.TryParse(value, out tmp))
+                if (Int32.TryParse(value, out tmp))
                     return Enum.ToObject(enumType, tmp);
+                return GetDefaultValue(property);
             }
             if (property.PropertyType == typeof(bool))
                 return value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
@@ -308,6 +313,15 @@ namespace _7D2D_ServerInfo
                 return new Uri(Convert.ToString(value));
             else
                 return Convert.ChangeType(value, property.PropertyType);
+        }
+
+        private object? GetDefaultValue(PropertyInfo property)
+        {
+            if (property.PropertyType.IsValueType)
+                return Activator.CreateInstance(property.PropertyType);
+            if (property.PropertyType == typeof(string))
+                return string.Empty;
+            return null;
         }
 
         private int GetAirdropIntervalDays()

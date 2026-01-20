@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,9 +58,9 @@ namespace _7D2D_ServerInfo
                 // Delegate the actual fetch and JSON parsing to the loader so we can
                 // centralize HTTP settings (timeouts, shared HttpClient, etc.).
                 var remoteConfig = await RemoteConfigLoader.LoadAsync(RemoteConfigUri, cancellationToken);
-                if (remoteConfig is not null)
+                if (TryNormalizeAndValidate(remoteConfig, out RemoteConfig normalizedConfig))
                 {
-                    return remoteConfig;
+                    return normalizedConfig;
                 }
             }
             catch (Exception ex)
@@ -70,10 +71,10 @@ namespace _7D2D_ServerInfo
             try
             {
                 var localConfig = await RemoteConfigLoader.LoadFromFileAsync(LocalConfigPath, cancellationToken);
-                if (localConfig is not null)
+                if (TryNormalizeAndValidate(localConfig, out RemoteConfig normalizedConfig))
                 {
                     Console.Error.WriteLine("Loaded local config fallback.");
-                    return localConfig;
+                    return normalizedConfig;
                 }
             }
             catch (Exception ex)
@@ -82,6 +83,33 @@ namespace _7D2D_ServerInfo
             }
 
             return null;
+        }
+
+        private static bool TryNormalizeAndValidate(RemoteConfig? config, out RemoteConfig normalizedConfig)
+        {
+            normalizedConfig = null!;
+            if (config is null)
+            {
+                Console.Error.WriteLine("Config payload was empty.");
+                return false;
+            }
+
+            // Normalize values first (trimming strings, defaulting invalid intervals).
+            var normalized = RemoteConfigValidator.Normalize(config, out IReadOnlyList<string> warnings);
+            foreach (string warning in warnings)
+            {
+                Console.Error.WriteLine($"Config warning: {warning}");
+            }
+
+            // Enforce required fields and ranges before continuing to startup.
+            if (!RemoteConfigValidator.TryValidate(normalized, out string errorMessage))
+            {
+                Console.Error.WriteLine($"Config validation failed: {errorMessage}");
+                return false;
+            }
+
+            normalizedConfig = normalized;
+            return true;
         }
 
         /// <summary>
@@ -95,7 +123,7 @@ namespace _7D2D_ServerInfo
         {
             Console.Title = $"7 Days to Die - Horde & Airdrop Viewer - {config.ServerHost}:{config.ServerPort}";
 
-            _ = UpdateBootstrapper.TryStart(config);
+            var updater = UpdateBootstrapper.TryStart(config);
 
             IConnection connection;
             try
@@ -111,7 +139,7 @@ namespace _7D2D_ServerInfo
             }
 
             _7D2D_ServerInfo serverInfo = new _7D2D_ServerInfo(connection, debug);
-            IGUI gui = new GUI_Console(serverInfo);
+            using IGUI gui = new GUI_Console(serverInfo);
             TimeSpan refreshDelay = ProgramHelpers.GetRefreshDelay(config.RefreshIntervalSeconds);
 
             try
@@ -129,6 +157,8 @@ namespace _7D2D_ServerInfo
             catch (OperationCanceledException)
             {
             }
+
+            GC.KeepAlive(updater);
         }
     }
 }

@@ -57,9 +57,11 @@ namespace _7D2D_ServerInfo.Tests
         }
 
         [Fact]
-        public void IsDebugMode_ThrowsWhenArgsNull()
+        public void IsDebugMode_ReturnsFalseWhenArgsNull()
         {
-            Assert.Throws<NullReferenceException>(() => ProgramHelpers.IsDebugMode(null!));
+            bool result = ProgramHelpers.IsDebugMode(null!);
+
+            Assert.False(result);
         }
 
         [Theory]
@@ -90,9 +92,11 @@ namespace _7D2D_ServerInfo.Tests
         }
 
         [Fact]
-        public void GetRefreshDelay_ThrowsWhenTooLarge()
+        public void GetRefreshDelay_ClampsWhenTooLarge()
         {
-            Assert.ThrowsAny<Exception>(() => ProgramHelpers.GetRefreshDelay(double.MaxValue));
+            TimeSpan delay = ProgramHelpers.GetRefreshDelay(double.MaxValue);
+
+            Assert.Equal(TimeSpan.MaxValue, delay);
         }
     }
 }
