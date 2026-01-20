@@ -16,11 +16,14 @@ namespace _7D2D_ServerInfo
     {
         private const int MaxDaysHorizontal = 19;
         private const int MaxCharactersPerDay = 6;
+        private const int RequiredConsoleWidth = 111;
+        private const int RequiredConsoleHeight = 21;
 
         // Reference to the data provider used for rendering the console UI.
         private readonly _7D2D_ServerInfo _ServerInfo;
 
         private bool bError = false;
+        private bool layoutWarningShown = false;
 
         public bool UpdateAvailable { get; set; }
 
@@ -34,12 +37,20 @@ namespace _7D2D_ServerInfo
             // Fix the window size so the UI aligns with the ASCII calendar layout.
             try
             {
-                var width = Math.Min(111, Console.LargestWindowWidth);
-                var height = Math.Min(21, Console.LargestWindowHeight);
-                if (width > 0 && height > 0)
+                if (!Console.IsOutputRedirected)
                 {
-                    Console.WindowWidth = width; // MaxDaysHorizontal * MaxCharactersPerDay -3;
-                    Console.WindowHeight = height;
+                    var width = Math.Min(RequiredConsoleWidth, Console.LargestWindowWidth);
+                    var height = Math.Min(RequiredConsoleHeight, Console.LargestWindowHeight);
+                    if (width > 0 && height > 0)
+                    {
+                        Console.WindowWidth = width; // MaxDaysHorizontal * MaxCharactersPerDay -3;
+                        Console.WindowHeight = height;
+                        if (OperatingSystem.IsWindows())
+                        {
+                            Console.BufferWidth = Math.Max(Console.BufferWidth, width);
+                            Console.BufferHeight = Math.Max(Console.BufferHeight, height);
+                        }
+                    }
                 }
             }
             catch (ArgumentOutOfRangeException)
@@ -57,6 +68,11 @@ namespace _7D2D_ServerInfo
         /// </summary>
         public void Draw()
         {
+            if (!TryEnsureConsoleLayout())
+            {
+                return;
+            }
+
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
 
@@ -201,6 +217,13 @@ namespace _7D2D_ServerInfo
         /// </summary>
         public void DrawConnectionError()
         {
+            if (!TryEnsureConsoleLayout())
+            {
+                Console.WriteLine($"{DateTime.Now.ToString()}: Fehler beim herstellen der Verbindung.");
+                Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
+                return;
+            }
+
             //Console.Clear();
             // Clear the screen once when entering an error state to avoid overlay artifacts.
             if (bError == false)
@@ -213,6 +236,47 @@ namespace _7D2D_ServerInfo
             Console.BackgroundColor = ConsoleColor.Black;
             Console.WriteLine($"{DateTime.Now.ToString()}: Fehler beim herstellen der Verbindung.");
             Console.WriteLine($"{DateTime.Now.ToString()}: Neuer Verbindungsversuch.");
+        }
+
+        private bool TryEnsureConsoleLayout()
+        {
+            if (Console.IsOutputRedirected)
+            {
+                // When output is redirected, cursor positioning is not supported.
+                if (!layoutWarningShown)
+                {
+                    layoutWarningShown = true;
+                    Console.WriteLine("Console output is redirected. The interactive UI is disabled.");
+                }
+                return false;
+            }
+
+            if (Console.WindowWidth < RequiredConsoleWidth || Console.WindowHeight < RequiredConsoleHeight)
+            {
+                // Prevent SetCursorPosition exceptions on small windows.
+                if (!layoutWarningShown)
+                {
+                    layoutWarningShown = true;
+                    Console.Clear();
+                    Console.WriteLine($"Console window is too small. Resize to at least {RequiredConsoleWidth}x{RequiredConsoleHeight}.");
+                }
+                return false;
+            }
+
+            if (Console.BufferWidth < RequiredConsoleWidth || Console.BufferHeight < RequiredConsoleHeight)
+            {
+                // Buffer size must also be large enough for the calendar layout.
+                if (!layoutWarningShown)
+                {
+                    layoutWarningShown = true;
+                    Console.Clear();
+                    Console.WriteLine($"Console buffer is too small. Resize to at least {RequiredConsoleWidth}x{RequiredConsoleHeight}.");
+                }
+                return false;
+            }
+
+            layoutWarningShown = false;
+            return true;
         }
 
         /// <summary>

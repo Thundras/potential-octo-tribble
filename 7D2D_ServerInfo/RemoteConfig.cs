@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
@@ -19,6 +21,62 @@ namespace _7D2D_ServerInfo
         string UpdateAppCastUrl,
         string UpdatePublicKey
     );
+
+    /// <summary>
+    /// Normalizes and validates config values so the app can fail fast on bad input.
+    /// </summary>
+    internal static class RemoteConfigValidator
+    {
+        private const double DefaultRefreshIntervalSeconds = 1;
+
+        /// <summary>
+        /// Normalizes fields and returns warnings for non-fatal issues (e.g., invalid refresh interval).
+        /// </summary>
+        public static RemoteConfig Normalize(RemoteConfig config, out IReadOnlyList<string> warnings)
+        {
+            var warningList = new List<string>();
+            double refreshInterval = config.RefreshIntervalSeconds;
+            if (!double.IsFinite(refreshInterval) || refreshInterval <= 0)
+            {
+                refreshInterval = DefaultRefreshIntervalSeconds;
+                warningList.Add($"Invalid refreshIntervalSeconds value detected. Defaulting to {DefaultRefreshIntervalSeconds} second(s).");
+            }
+
+            string serverHost = (config.ServerHost ?? string.Empty).Trim();
+            string appCastUrl = (config.UpdateAppCastUrl ?? string.Empty).Trim();
+            string publicKey = (config.UpdatePublicKey ?? string.Empty).Trim();
+
+            warnings = warningList;
+            return config with
+            {
+                ServerHost = serverHost,
+                RefreshIntervalSeconds = refreshInterval,
+                UpdateAppCastUrl = appCastUrl,
+                UpdatePublicKey = publicKey
+            };
+        }
+
+        /// <summary>
+        /// Validates required fields and value ranges. Returns false for blocking issues.
+        /// </summary>
+        public static bool TryValidate(RemoteConfig config, out string errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(config.ServerHost))
+            {
+                errorMessage = "Server host is missing.";
+                return false;
+            }
+
+            if (config.ServerPort <= 0 || config.ServerPort >= 65535)
+            {
+                errorMessage = $"Server port '{config.ServerPort}' is out of range (1-65534).";
+                return false;
+            }
+
+            errorMessage = string.Empty;
+            return true;
+        }
+    }
 
     /// <summary>
     /// Helper responsible for downloading and deserializing remote configuration.

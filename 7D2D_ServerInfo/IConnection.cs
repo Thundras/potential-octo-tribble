@@ -8,6 +8,6 @@ namespace _7D2D_ServerInfo
 {
     interface IConnection
     {
-        byte[] Refresh();
+        byte[]? Refresh();
     }
 }

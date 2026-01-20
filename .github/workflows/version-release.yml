@@ -1,0 +1,131 @@
+name: Bump version and create release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  bump-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine bump and update version
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          pr_number=""
+          if [[ "${{ github.event.head_commit.message }}" =~ \(\#([0-9]+)\) ]]; then
+            pr_number="${BASH_REMATCH[1]}"
+          fi
+
+          bump="patch"
+          if [[ -n "$pr_number" ]]; then
+            labels=$(gh api "repos/${{ github.repository }}/pulls/${pr_number}" --jq '.labels[].name' || true)
+            if echo "$labels" | grep -q "release:major"; then
+              bump="major"
+            elif echo "$labels" | grep -q "release:minor"; then
+              bump="minor"
+            elif echo "$labels" | grep -q "release:patch"; then
+              bump="patch"
+            fi
+          fi
+
+          assembly_file="7D2D_ServerInfo/Properties/AssemblyInfo.cs"
+          current_version=$(python - <<'PY'
+import re
+from pathlib import Path
+
+content = Path("7D2D_ServerInfo/Properties/AssemblyInfo.cs").read_text(encoding="utf-8")
+match = re.search(r'AssemblyVersion\\(\"(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)\"\\)', content)
+if not match:
+    raise SystemExit("AssemblyVersion not found.")
+print(".".join(match.groups()))
+PY
+          )
+
+          export BUMP="$bump"
+          python - <<'PY'
+import os
+import re
+from pathlib import Path
+
+bump = os.environ["BUMP"]
+assembly_path = Path("7D2D_ServerInfo/Properties/AssemblyInfo.cs")
+content = assembly_path.read_text(encoding="utf-8")
+match = re.search(r'AssemblyVersion\\(\"(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)\"\\)', content)
+if not match:
+    raise SystemExit("AssemblyVersion not found.")
+
+major, minor, patch, build = map(int, match.groups())
+if bump == "major":
+    major += 1
+    minor = 0
+    patch = 0
+elif bump == "minor":
+    minor += 1
+    patch = 0
+else:
+    patch += 1
+
+new_version = f"{major}.{minor}.{patch}.0"
+content = re.sub(r'AssemblyVersion\\(\"[^\"]+\"\\)', f'AssemblyVersion("{new_version}")', content)
+content = re.sub(r'AssemblyFileVersion\\(\"[^\"]+\"\\)', f'AssemblyFileVersion("{new_version}")', content)
+assembly_path.write_text(content, encoding="utf-8")
+
+release_notes = Path("docs/release-notes.md")
+notes = release_notes.read_text(encoding="utf-8")
+header = f"## {major}.{minor}.{patch}"
+if header not in notes:
+    insertion = f\"\"\"{header} ({__import__('datetime').date.today().isoformat()})\\n\\n### Added\\n- Automated release.\\n\\n\"\"\"
+    notes = notes.replace("## Unreleased\\n\\n", "## Unreleased\\n\\n" + insertion)
+    release_notes.write_text(notes, encoding="utf-8")
+
+print(f"{major}.{minor}.{patch}")
+PY
+
+          new_version=$(python - <<'PY'
+import re
+from pathlib import Path
+
+content = Path("7D2D_ServerInfo/Properties/AssemblyInfo.cs").read_text(encoding="utf-8")
+match = re.search(r'AssemblyVersion\\(\"(\\d+\\.\\d+\\.\\d+)\\.0\"\\)', content)
+if not match:
+    raise SystemExit("AssemblyVersion not found.")
+print(match.group(1))
+PY
+          )
+
+          if [[ "$current_version" == "${new_version}.0" ]]; then
+            echo "Version unchanged; skipping release."
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$assembly_file" docs/release-notes.md
+          git commit -m "chore: bump version to ${new_version}"
+          git tag "v${new_version}"
+          git push origin HEAD:main --tags
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "version=${new_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        if: steps.bump.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${{ steps.bump.outputs.version }}"
+          gh release create "v${version}" --title "v${version}" --notes "Automated release for v${version}."
