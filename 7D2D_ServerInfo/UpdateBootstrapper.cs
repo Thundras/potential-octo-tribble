@@ -1,4 +1,5 @@
 using NetSparkleUpdater;
+using NetSparkleUpdater.Enums;
 using NetSparkleUpdater.SignatureVerifiers;
 
 namespace _7D2D_ServerInfo
@@ -17,7 +18,7 @@ namespace _7D2D_ServerInfo
                 return null;
             }
 
-            var verifier = new Ed25519Checker(config.UpdatePublicKey);
+            var verifier = new Ed25519Checker(SecurityMode.Strict, config.UpdatePublicKey);
             var sparkle = new SparkleUpdater(config.UpdateAppCastUrl, verifier);
             sparkle.StartLoop(true, true);
             return sparkle;

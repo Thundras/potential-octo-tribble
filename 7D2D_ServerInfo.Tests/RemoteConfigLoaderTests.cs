@@ -86,7 +86,7 @@ namespace _7D2D_ServerInfo.Tests
             }
             """;
 
-            Uri uri = StartHttpListener(json, out HttpListener listener, out Task handlerTask);
+            Uri uri = StartHttpListener(json, out TcpListener listener, out Task handlerTask);
 
             try
             {
@@ -102,14 +102,23 @@ namespace _7D2D_ServerInfo.Tests
             finally
             {
                 listener.Stop();
-                await handlerTask;
+                try
+                {
+                    await handlerTask;
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+                catch (SocketException)
+                {
+                }
             }
         }
 
         [Fact]
         public async Task LoadAsync_ThrowsForInvalidJson()
         {
-            Uri uri = StartHttpListener("invalid-json", out HttpListener listener, out Task handlerTask);
+            Uri uri = StartHttpListener("invalid-json", out TcpListener listener, out Task handlerTask);
 
             try
             {
@@ -119,7 +128,16 @@ namespace _7D2D_ServerInfo.Tests
             finally
             {
                 listener.Stop();
-                await handlerTask;
+                try
+                {
+                    await handlerTask;
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+                catch (SocketException)
+                {
+                }
             }
         }
 
@@ -133,22 +151,23 @@ namespace _7D2D_ServerInfo.Tests
                 RemoteConfigLoader.LoadAsync(new Uri("http://localhost:12345"), cts.Token));
         }
 
-        private static Uri StartHttpListener(string responseBody, out HttpListener listener, out Task handlerTask)
+        private static Uri StartHttpListener(string responseBody, out TcpListener listener, out Task handlerTask)
         {
             int port = GetFreeTcpPort();
-            string prefix = $"http://localhost:{port}/";
-            listener = new HttpListener();
-            listener.Prefixes.Add(prefix);
-            listener.Start();
+            string prefix = $"http://127.0.0.1:{port}/";
+            var localListener = new TcpListener(IPAddress.Loopback, port);
+            localListener.Start();
+            listener = localListener;
 
             handlerTask = Task.Run(async () =>
             {
-                HttpListenerContext context = await listener.GetContextAsync();
-                context.Response.StatusCode = 200;
-                context.Response.ContentType = "application/json";
-                await using var writer = new StreamWriter(context.Response.OutputStream);
-                await writer.WriteAsync(responseBody);
-                context.Response.Close();
+                using TcpClient client = await localListener.AcceptTcpClientAsync();
+                await using NetworkStream stream = client.GetStream();
+                byte[] payload = System.Text.Encoding.UTF8.GetBytes(responseBody);
+                string header = $"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {payload.Length}\r\nConnection: close\r\n\r\n";
+                byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(header);
+                await stream.WriteAsync(headerBytes);
+                await stream.WriteAsync(payload);
             });
 
             return new Uri($"{prefix}config");
